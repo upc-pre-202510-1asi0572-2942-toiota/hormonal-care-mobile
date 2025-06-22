@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:trabajo_moviles_ninjacode/scr/features/profile/data/data_sources/remote/profile_service.dart';
 import 'package:trabajo_moviles_ninjacode/scr/core/utils/usecases/jwt_storage.dart';
 import 'package:trabajo_moviles_ninjacode/scr/features/iam/domain/services/auth_service.dart';
 import 'package:http/http.dart' as http;
@@ -19,7 +18,6 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
   bool isEditing = false;
   Future<Map<String, dynamic>>? _doctorProfileDetails;
   final AuthService _authService = AuthService();
-  final ProfileService _profileService = ProfileService();
   int? _doctorId;
 
   @override
@@ -29,26 +27,26 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
   }
 
   Future<void> _loadDoctorProfileDetails() async {
-  final profileId = await JwtStorage.getProfileId();
-
-  if (profileId != null) {
-    final profileDetails = await _profileService.fetchProfileDetails(profileId);
-    final doctorProfessionalDetails = await _profileService.fetchDoctorProfessionalDetails(profileId);
-
-    final combinedDetails = {
-      ...profileDetails,
-      ...doctorProfessionalDetails,
-    };
-
-    setState(() {
-      _doctorProfileDetails = Future.value(combinedDetails);
-      _doctorId = doctorProfessionalDetails['id'];
-    });
-  } else {
-    // Maneja el caso en que no se encuentra el profile ID
-    print('Profile ID not found');
+    final userId = await JwtStorage.getUserId();
+    final token = await JwtStorage.getToken();
+    if (userId != null && token != null) {
+      final response = await http.get(
+        Uri.parse('http://localhost:8080/api/v1/doctor/by-user/$userId'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+      if (response.statusCode == 200) {
+        final doctorData = json.decode(response.body);
+        setState(() {
+          _doctorProfileDetails = Future.value(doctorData);
+          _doctorId = doctorData['id'];
+        });
+      } else {
+        print('Error fetching doctor data: \\${response.statusCode}');
+      }
+    } else {
+      print('User ID or token not found');
+    }
   }
-}
 
   void toggleEditMode() {
     setState(() {
@@ -91,135 +89,90 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
     );
   }
 
-  Future<void> _saveDoctorProfileDetails(Map<String, dynamic> updatedDoctorProfile) async {
-    if (_doctorId != null) {
-      try {
-        await _profileService.updateDoctorProfile(_doctorId!, updatedDoctorProfile);
-        print('Doctor profile updated successfully');
-        toggleEditMode();
-        _loadDoctorProfileDetails();
-      } catch (e) {
-        print('Error updating doctor profile: $e');
-      }
-    } else {
-      print('Doctor ID not found');
-    }
-  }
-
- @override
-Widget build(BuildContext context) {
-  return Scaffold(
-    appBar: AppBar(
-      backgroundColor: Color(0xFF6A828D),
-      title: Text('Doctor Profile'),
-      centerTitle: true,
-      titleTextStyle: TextStyle(
-        color: Colors.white,
-        fontSize: 20.0,
-        fontWeight: FontWeight.bold,
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Color(0xFF6A828D),
+        title: Text('Doctor Profile'),
+        centerTitle: true,
+        titleTextStyle: TextStyle(
+          color: Colors.white,
+          fontSize: 20.0,
+          fontWeight: FontWeight.bold,
+        ),
       ),
-    ),
-    body: SingleChildScrollView(
-      padding: EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          // Profile picture, edit button, and logout button
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              IconButton(
-                icon: Icon(Icons.edit, color: const Color.fromARGB(255, 0, 0, 0)),
-                onPressed: toggleEditMode,
-              ),
-              SizedBox(width: 8.0), // Reduce the space between the edit button and the profile picture
+      body: SingleChildScrollView(
+        padding: EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                IconButton(
+                  icon: Icon(Icons.edit, color: const Color.fromARGB(255, 0, 0, 0)),
+                  onPressed: toggleEditMode,
+                ),
+                SizedBox(width: 8.0),
+                FutureBuilder<Map<String, dynamic>>(
+                  future: _doctorProfileDetails,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return CircularProgressIndicator();
+                    } else if (snapshot.hasError) {
+                      return Icon(Icons.error);
+                    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                      return Icon(Icons.person);
+                    } else {
+                      final doctorProfile = snapshot.data!;
+                      final imageUrl = doctorProfile['image'] as String?;
+                      return ProfilePictureWidget(
+                        isEditing: isEditing,
+                        toggleEditMode: toggleEditMode,
+                        imageUrl: imageUrl,
+                      );
+                    }
+                  },
+                ),
+                SizedBox(width: 8.0),
+                IconButton(
+                  icon: Icon(Icons.logout, color: const Color.fromARGB(255, 0, 0, 0)),
+                  onPressed: _showLogoutDialog,
+                ),
+              ],
+            ),
+            SizedBox(height: 20.0),
+            if (!isEditing) ...[
               FutureBuilder<Map<String, dynamic>>(
                 future: _doctorProfileDetails,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return CircularProgressIndicator();
+                    return Center(child: CircularProgressIndicator());
                   } else if (snapshot.hasError) {
-                    return Icon(Icons.error);
+                    return Center(child: Text('Error: \\${snapshot.error}'));
                   } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return Icon(Icons.person);
+                    return Center(child: Text('No data found'));
                   } else {
                     final doctorProfile = snapshot.data!;
-                    final imageUrl = doctorProfile['image'] as String?;
-                    return ProfilePictureWidget(
-                      isEditing: isEditing,
-                      toggleEditMode: toggleEditMode,
-                      imageUrl: imageUrl,
+                    return Column(
+                      children: [
+                        ProfileFieldWidget(label: "Fullname", value: doctorProfile['fullName'] ?? ''),
+                        ProfileFieldWidget(label: "Gender", value: doctorProfile['gender'] ?? ''),
+                        ProfileFieldWidget(label: "Phone Number", value: doctorProfile['phoneNumber'] ?? ''),
+                        ProfileFieldWidget(label: "Birthday", value: doctorProfile['birthday'] ?? ''),
+                        ProfileFieldWidget(label: "RNE", value: doctorProfile['professionalIdentificationNumber']?.toString() ?? ''),
+                        ProfileFieldWidget(label: "SubSpecialty", value: doctorProfile['subSpecialty'] ?? ''),
+                      ],
                     );
                   }
                 },
               ),
-              SizedBox(width: 8.0), // Reduce the space between the profile picture and the logout button
-              IconButton(
-                icon: Icon(Icons.logout, color: const Color.fromARGB(255, 0, 0, 0)),
-                onPressed: _showLogoutDialog,
-              ),
             ],
-          ),
-
-          SizedBox(height: 20.0),
-
-          // Display fields or editable fields based on edit mode
-          if (!isEditing) ...[
-            FutureBuilder<Map<String, dynamic>>(
-              future: _doctorProfileDetails,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator());
-                } else if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
-                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return Center(child: Text('No data found'));
-                } else {
-                  final doctorProfile = snapshot.data!;
-                  final fullName = doctorProfile['fullName'] ?? '';
-                  final nameParts = fullName.split(' ');
-                  final firstName = nameParts.isNotEmpty ? nameParts[0] : '';
-                  final lastName = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
-
-                  return Column(
-                    children: [
-                      ProfileFieldWidget(label: "First Name", value: firstName),
-                      ProfileFieldWidget(label: "Last Name", value: lastName),
-                      ProfileFieldWidget(label: "Gender", value: doctorProfile['gender'] ?? ''),
-                      ProfileFieldWidget(label: "Phone Number", value: doctorProfile['phoneNumber'] ?? ''),
-                      ProfileFieldWidget(label: "Birthday", value: doctorProfile['birthday'] ?? ''),
-                      ProfileFieldWidget(label: "Professional ID Number", value: doctorProfile['professionalIdentificationNumber']?.toString() ?? ''),
-                      ProfileFieldWidget(label: "SubSpecialty", value: doctorProfile['subSpecialty'] ?? ''),
-                      // Add more fields as needed
-                    ],
-                  );
-                }
-              },
-            ),
-          ] else ...[
-            FutureBuilder<Map<String, dynamic>>(
-              future: _doctorProfileDetails,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator());
-                } else if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
-                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return Center(child: Text('No data found'));
-                } else {
-                  return EditModeDoctorWidget(
-                    doctorProfile: snapshot.data!,
-                    onCancel: toggleEditMode,
-                    onSave: (updatedDoctorProfile) {
-                      _saveDoctorProfileDetails(updatedDoctorProfile);
-                    },
-                  );
-                }
-              },
-            ),
+            // ...Opcional: modo edición...
           ],
-        ],
+        ),
       ),
-    ),
-  );
-}}
+    );
+  }
+}

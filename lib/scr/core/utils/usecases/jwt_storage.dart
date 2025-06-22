@@ -7,6 +7,7 @@ class JwtStorage {
   static const String _profileIdKey = 'profile_id';
 
   static const String _doctorIdKey = 'doctor_id';
+  static const String _doctorFullNameKey = 'doctor_full_name';
 
   static Future<void> saveDoctorId(int doctorId) async {
     final prefs = await SharedPreferences.getInstance();
@@ -18,7 +19,17 @@ class JwtStorage {
     return prefs.getInt(_doctorIdKey);
   }
 
-    static Future<void> saveToken(String token) async {
+  static Future<void> saveDoctorFullName(String fullName) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_doctorFullNameKey, fullName);
+  }
+
+  static Future<String?> getDoctorFullName() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_doctorFullNameKey);
+  }
+
+  static Future<void> saveToken(String token) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_tokenKey, token);
   }
@@ -57,6 +68,7 @@ class JwtStorage {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getInt(_profileIdKey);
   }
+
   static Future<void> removeToken() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_tokenKey);
@@ -66,7 +78,7 @@ class JwtStorage {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_userIdKey);
   }
-  
+
   static Future<void> clearAll() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_tokenKey);

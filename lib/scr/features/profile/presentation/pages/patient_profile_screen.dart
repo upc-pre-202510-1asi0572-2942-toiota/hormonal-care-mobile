@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:trabajo_moviles_ninjacode/scr/features/iam/domain/services/auth_service.dart';
-import 'package:trabajo_moviles_ninjacode/scr/features/profile/data/data_sources/remote/profile_service.dart';
 import 'package:trabajo_moviles_ninjacode/scr/core/utils/usecases/jwt_storage.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import '../widgets/profile_picture_widget.dart';
 import '../widgets/profile_field_widget.dart';
-import '../widgets/logout_button_widget.dart';
-import '../widgets/edit_mode_widget.dart';
 import 'package:trabajo_moviles_ninjacode/scr/features/iam/presentation/pages/sign_in.dart';
 
 class PatientProfileScreen extends StatefulWidget {
@@ -15,26 +14,33 @@ class PatientProfileScreen extends StatefulWidget {
 
 class _PatientProfileScreenState extends State<PatientProfileScreen> {
   bool isEditing = false;
-  Future<Map<String, dynamic>>? _profileDetails;
+  Future<Map<String, dynamic>>? _patientProfileDetails;
   final AuthService _authService = AuthService();
-  final ProfileService _profileService = ProfileService();
 
   @override
   void initState() {
     super.initState();
-    _loadProfileDetails();
+    _loadPatientProfileDetails();
   }
 
-  Future<void> _loadProfileDetails() async {
+  Future<void> _loadPatientProfileDetails() async {
     final userId = await JwtStorage.getUserId();
-
-    if (userId != null) {
-      setState(() {
-        _profileDetails = _profileService.fetchProfileDetails(userId);
-      });
+    final token = await JwtStorage.getToken();
+    if (userId != null && token != null) {
+      final response = await http.get(
+        Uri.parse('http://localhost:8080/api/v1/patient/by-user/$userId'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+      if (response.statusCode == 200) {
+        final patientData = json.decode(response.body);
+        setState(() {
+          _patientProfileDetails = Future.value(patientData);
+        });
+      } else {
+        print('Error fetching patient data: \\${response.statusCode}');
+      }
     } else {
-      // Maneja el caso en que no se encuentra el user ID
-      print('User ID not found');
+      print('User ID or token not found');
     }
   }
 
@@ -70,7 +76,6 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Profile picture, edit button, and logout button
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -78,9 +83,9 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
                   icon: Icon(Icons.edit, color: const Color.fromARGB(255, 0, 0, 0)),
                   onPressed: toggleEditMode,
                 ),
-                SizedBox(width: 8.0), // Reduce the space between the edit button and the profile picture
+                SizedBox(width: 8.0),
                 FutureBuilder<Map<String, dynamic>>(
-                  future: _profileDetails,
+                  future: _patientProfileDetails,
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return CircularProgressIndicator();
@@ -89,8 +94,8 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
                     } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
                       return Icon(Icons.person);
                     } else {
-                      final profile = snapshot.data!;
-                      final imageUrl = profile['image'] as String?;
+                      final patientProfile = snapshot.data!;
+                      final imageUrl = patientProfile['image'] as String?;
                       return ProfilePictureWidget(
                         isEditing: isEditing,
                         toggleEditMode: toggleEditMode,
@@ -99,71 +104,40 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
                     }
                   },
                 ),
-                SizedBox(width: 8.0), // Reduce the space between the profile picture and the logout button
+                SizedBox(width: 8.0),
                 IconButton(
                   icon: Icon(Icons.logout, color: const Color.fromARGB(255, 0, 0, 0)),
                   onPressed: _logout,
                 ),
               ],
             ),
-
             SizedBox(height: 20.0),
-
-            // Display fields or editable fields based on edit mode
             if (!isEditing) ...[
               FutureBuilder<Map<String, dynamic>>(
-                future: _profileDetails,
+                future: _patientProfileDetails,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return Center(child: CircularProgressIndicator());
                   } else if (snapshot.hasError) {
-                    return Center(child: Text('Error: ${snapshot.error}'));
+                    return Center(child: Text('Error: \\${snapshot.error}'));
                   } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
                     return Center(child: Text('No data found'));
                   } else {
-                    final profile = snapshot.data!;
-                    final fullName = profile['fullName'] ?? '';
-                    final nameParts = fullName.split(' ');
-                    final firstName = nameParts.isNotEmpty ? nameParts[0] : '';
-                    final lastName = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
-
+                    final patientProfile = snapshot.data!;
                     return Column(
                       children: [
-                        ProfileFieldWidget(label: "First Name", value: firstName),
-                        ProfileFieldWidget(label: "Last Name", value: lastName),
-                        ProfileFieldWidget(label: "Gender", value: profile['gender'] ?? ''),
-                        ProfileFieldWidget(label: "Phone Number", value: profile['phoneNumber'] ?? ''),
-                        ProfileFieldWidget(label: "Birthday", value: profile['birthday'] ?? ''),
-                        // Add more fields as needed
+                        ProfileFieldWidget(label: "Fullname", value: patientProfile['fullName'] ?? ''),
+                        ProfileFieldWidget(label: "Birthday", value: patientProfile['birthday'] ?? ''),
+                        ProfileFieldWidget(label: "Gender", value: patientProfile['gender'] ?? ''),
+                        ProfileFieldWidget(label: "Phone Number", value: patientProfile['phoneNumber'] ?? ''),
+                        ProfileFieldWidget(label: "Type of Blood", value: patientProfile['typeOfBlood'] ?? ''),
                       ],
                     );
                   }
                 },
               ),
-            ] else ...[
-              FutureBuilder<Map<String, dynamic>>(
-                future: _profileDetails,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return Center(child: CircularProgressIndicator());
-                  } else if (snapshot.hasError) {
-                    return Center(child: Text('Error: ${snapshot.error}'));
-                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return Center(child: Text('No data found'));
-                  } else {
-                    return EditModeWidget(
-                      profile: snapshot.data!,
-                      onCancel: toggleEditMode,
-                      onSave: (updatedProfile) {
-                        _profileService.updateProfile(updatedProfile['id'], updatedProfile);
-                        _loadProfileDetails();
-                        toggleEditMode();
-                      },
-                    );
-                  }
-                },
-              ),
             ],
+            // ...Opcional: modo edición...
           ],
         ),
       ),
