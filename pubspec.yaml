@@ -31,11 +31,11 @@ dependencies:
   flutter:
     sdk: flutter
   intl: 0.19.0
-  http: ^0.13.4
+  http: 1.2.1
   shared_preferences: ^2.0.12
   confetti: ^0.6.0  # Add the latest version of the confetti package
-  timezone: 0.9.4
-  syncfusion_flutter_calendar: 27.1.52
+  timezone: 0.10.0
+  syncfusion_flutter_calendar: 29.1.39
   flutter_spinbox: ^0.13.0
   url_launcher: ^6.0.9
 
