@@ -137,7 +137,6 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
                 },
               ),
             ],
-            // ...Opcional: modo edición...
           ],
         ),
       ),
