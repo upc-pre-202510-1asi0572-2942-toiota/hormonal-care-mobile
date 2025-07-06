@@ -105,23 +105,23 @@ class MedicalRecordService {
     
   }
 
-    Future<http.Response> addMedication(MedicationPost medicationPost) async {
-  final token = await JwtStorage.getToken();
-  final headers = {
-    'Content-Type': 'application/json',
-    'Authorization': 'Bearer $token',
-  };
+  Future<http.Response> addMedication(MedicationPost medicationPost) async {
+    final token = await JwtStorage.getToken();
+    final headers = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    };
 
-  final response = await http.post(
-    Uri.parse(medicationsUrl),
-    headers: headers,
-    body: json.encode(medicationPost.toJson()),
-  );
+    final response = await http.post(
+      Uri.parse(medicationsUrl),
+      headers: headers,
+      body: json.encode(medicationPost.toJson()),
+    );
 
-  return response;
-}
+    return response;
+  }
 
-Future<http.Response> addPrescription(PrescriptionPost prescriptionPost) async {
+  Future<http.Response> addPrescription(PrescriptionPost prescriptionPost) async {
     final token = await JwtStorage.getToken();
     final headers = {
       'Content-Type': 'application/json',
@@ -136,6 +136,7 @@ Future<http.Response> addPrescription(PrescriptionPost prescriptionPost) async {
 
     return response;
   }
+  
   Future<http.Response> addTreatment(Treatment treatment) async {
     final token = await JwtStorage.getToken();
       print('Tokenzzz: $token'); // Agrega este log para verificar el token
@@ -154,7 +155,7 @@ Future<http.Response> addPrescription(PrescriptionPost prescriptionPost) async {
     return response;
   }
 
-Future<List<MedicalType>> fetchMedicalTypes() async {
+  Future<List<MedicalType>> fetchMedicalTypes() async {
     final token = await JwtStorage.getToken();
     final headers = {
       'Content-Type': 'application/json',
