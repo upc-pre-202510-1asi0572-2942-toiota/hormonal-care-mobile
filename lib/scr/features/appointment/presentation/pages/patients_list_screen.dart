@@ -39,38 +39,38 @@ class _HomePatientsScreenState extends State<HomePatientsScreen> {
     });
 
     try {
-      final userId = await JwtStorage.getUserId();
       final role = await JwtStorage.getRole();
-
       if (role != 'ROLE_DOCTOR') {
         throw Exception('Only doctors can view patients');
       }
 
+      // Obtener solo los appointments de hoy
       final appointments = await _appointmentApi.fetchAppointmentsForToday();
       final List<Map<String, String>> fetchedPatients = [];
-      final limaTimeZone = tz.getLocation('America/Lima');
-
       for (var appointment in appointments) {
-        final patientDetails = await _patientService.fetchPatientDetails(appointment['patientId']);
-        final profileDetails = await _profileService.fetchProfileDetails(patientDetails['profileId']);
+        String imageUrl = '';
+        try {
+          final patientDetails = await _patientService.fetchPatientDetails(appointment['patientId']);
+          imageUrl = patientDetails['image'] ?? '';
+        } catch (_) {}
         fetchedPatients.add({
-          'name': profileDetails['fullName'] ?? 'No name',
+          'name': appointment['title'] ?? 'No name',
           'time': appointment['startTime'] ?? 'No start time',
           'endTime': appointment['endTime'] ?? 'No end time',
-          'image': profileDetails['image'] ?? '', // Assuming 'image' is the key for the profile image URL
+          'image': imageUrl,
           'eventDate': appointment['eventDate'] ?? 'No date',
           'patientId': appointment['patientId'].toString(),
           'title': appointment['title'] ?? 'No title',
           'description': appointment['description'] ?? 'No description',
-          'color': appointment['color'] ?? '0xFF039BE5', // Default color if none is provided
-          'appointmentId': appointment['id'].toString(), // Add appointment ID
+          'color': appointment['color'] ?? '0xFF039BE5',
+          'appointmentId': appointment['id'].toString(),
         });
       }
 
       // Ordenar las citas por hora
       fetchedPatients.sort((a, b) {
-        final aTime = tz.TZDateTime.from(DateTime.parse(a['eventDate']!), limaTimeZone);
-        final bTime = tz.TZDateTime.from(DateTime.parse(b['eventDate']!), limaTimeZone);
+        final aTime = a['time'] ?? '';
+        final bTime = b['time'] ?? '';
         return aTime.compareTo(bTime);
       });
 
@@ -174,8 +174,8 @@ class _HomePatientsScreenState extends State<HomePatientsScreen> {
                                     child: IconButton(
                                       padding: EdgeInsets.zero,
                                       icon: Icon(Icons.info, color: Colors.white, size: 16),
-                                      onPressed: () {
-                                        Navigator.push(
+                                      onPressed: () async {
+                                        final result = await Navigator.push(
                                           context,
                                           MaterialPageRoute(
                                             builder: (context) => AppointmentDetail(
@@ -183,6 +183,9 @@ class _HomePatientsScreenState extends State<HomePatientsScreen> {
                                             ),
                                           ),
                                         );
+                                        if (result == true) {
+                                          _fetchPatients();
+                                        }
                                       },
                                     ),
                                   ),

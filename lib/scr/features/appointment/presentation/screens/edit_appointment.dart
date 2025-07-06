@@ -90,14 +90,12 @@ class _EditAppointmentScreenState extends State<EditAppointmentScreen> {
 
   Future<void> _updateAppointment() async {
     try {
-      final String meetingLink = JitsiMeetingLinkGenerator.generateMeetingLink(roomPrefix: _titleController.text);
-
       final updatedAppointmentData = {
         'eventDate': DateFormat('yyyy-MM-dd').format(_selectedDate),
         'startTime': _formatTimeOfDay(_startTime),
         'endTime': _formatTimeOfDay(_endTime),
         'title': _titleController.text,
-        'description': meetingLink,
+        'description': _descriptionController.text.isNotEmpty ? _descriptionController.text : JitsiMeetingLinkGenerator.generateMeetingLink(roomPrefix: _titleController.text),
         'doctorId': widget.appointmentDetails['doctorId'],
         'patientId': _selectedPatientId,
         'color': _selectedColor.value.toRadixString(16),
@@ -205,11 +203,19 @@ class _EditAppointmentScreenState extends State<EditAppointmentScreen> {
             return SimpleDialogOption(
               onPressed: () {
                 setState(() {
-                  _selectedPatientId = patient['patientId'];
+                  _selectedPatientId = patient['id'];
                 });
                 Navigator.pop(context);
               },
-              child: Text(patient['fullName']),
+              child: Row(
+                children: [
+                  patient['image'] != null && patient['image'].toString().isNotEmpty
+                      ? CircleAvatar(backgroundImage: NetworkImage(patient['image']))
+                      : CircleAvatar(child: Icon(Icons.person)),
+                  SizedBox(width: 8),
+                  Text(patient['fullName'] ?? ''),
+                ],
+              ),
             );
           }).toList(),
         );
@@ -249,11 +255,18 @@ class _EditAppointmentScreenState extends State<EditAppointmentScreen> {
                     onTap: () => _selectPatient(context),
                     child: Row(
                       children: [
-                        Icon(Icons.person, color: Colors.grey),
+                        if (_patients.isNotEmpty)
+                          (_patients.firstWhere((patient) => patient['id'] == _selectedPatientId, orElse: () => {'image': null})['image'] != null &&
+                                  _patients.firstWhere((patient) => patient['id'] == _selectedPatientId, orElse: () => {'image': ''})['image'].toString().isNotEmpty)
+                              ? CircleAvatar(
+                                  backgroundImage: NetworkImage(_patients.firstWhere((patient) => patient['id'] == _selectedPatientId, orElse: () => {'image': ''})['image']),
+                                )
+                              : CircleAvatar(child: Icon(Icons.person)),
+                        if (_patients.isEmpty) CircleAvatar(child: Icon(Icons.person)),
                         SizedBox(width: 10),
                         Text(
                           _patients.isNotEmpty
-                              ? _patients.firstWhere((patient) => patient['patientId'] == _selectedPatientId, orElse: () => {'fullName': 'Unknown'})['fullName'] ?? 'Unknown'
+                              ? _patients.firstWhere((patient) => patient['id'] == _selectedPatientId, orElse: () => {'fullName': 'Unknown'})['fullName'] ?? 'Unknown'
                               : 'Unknown',
                           style: TextStyle(fontSize: 18),
                         ),

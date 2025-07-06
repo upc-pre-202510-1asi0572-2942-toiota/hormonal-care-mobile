@@ -61,13 +61,13 @@ class MedicalAppointmentApi {
 
   Future<int> _getDoctorId() async {
     final token = await _getToken();
-    final profileId = await JwtStorage.getProfileId();
-    if (profileId == null) {
-      throw Exception('Profile ID not found');
+    final userId = await _getUserId();
+    if (userId == null) {
+      throw Exception('User ID not found');
     }
 
     final response = await http.get(
-      Uri.parse('$_baseUrl/doctor/doctor/profile/$profileId'),
+      Uri.parse('$_baseUrl/doctor/by-user/$userId'),
       headers: {'Authorization': 'Bearer $token'},
     );
 
@@ -167,30 +167,12 @@ class MedicalAppointmentApi {
     }
 
     final response = await http.get(
-      Uri.parse('$_baseUrl/medical-record/patient/doctor/$doctorId'),
+      Uri.parse('$_baseUrl/patient/doctor/$doctorId'),
       headers: {'Authorization': 'Bearer $token'},
     );
 
     if (response.statusCode == 200) {
-      final List<Map<String, dynamic>> patients = List<Map<String, dynamic>>.from(json.decode(response.body));
-      final List<Map<String, dynamic>> patientProfiles = [];
-
-      for (var patient in patients) {
-        final profileResponse = await http.get(
-          Uri.parse('$_baseUrl/profile/profile/${patient['profileId']}'),
-          headers: {'Authorization': 'Bearer $token'},
-        );
-
-        if (profileResponse.statusCode == 200) {
-          final profileData = json.decode(profileResponse.body);
-          patientProfiles.add({
-            'patientId': patient['id'],
-            'fullName': profileData['fullName'],
-          });
-        }
-      }
-
-      return patientProfiles;
+      return List<Map<String, dynamic>>.from(json.decode(response.body));
     } else if (response.statusCode == 401) {
       throw Exception('Unauthorized: Invalid or expired token');
     } else {
@@ -200,13 +182,14 @@ class MedicalAppointmentApi {
 
   Future<bool> createMedicalAppointment(Map<String, dynamic> appointmentData) async {
     final token = await _getToken();
-    final userId = await _getUserId();
-    if (token == null || userId == null) {
-      throw Exception('Token or user ID not found');
+    final doctorId = await _getDoctorId();
+    if (token == null) {
+      throw Exception('Token not found');
     }
-  
-    appointmentData['userId'] = userId; // Add userId to the appointment data
-  
+
+    // doctorId debe estar en el body
+    appointmentData['doctorId'] = doctorId;
+
     final response = await http.post(
       Uri.parse('$_baseUrl/medicalAppointment'),
       headers: {
@@ -215,13 +198,32 @@ class MedicalAppointmentApi {
       },
       body: jsonEncode(appointmentData),
     );
-  
+
     if (response.statusCode == 201) {
       return true;
     } else if (response.statusCode == 401) {
       throw Exception('Unauthorized: Invalid or expired token');
     } else {
       throw Exception('Failed to create appointment');
+    }
+  }
+  Future<List<Map<String, dynamic>>> fetchAppointmentsForPatient(int patientId) async {
+    final token = await _getToken();
+    if (token == null) {
+      throw Exception('Token not found');
+    }
+
+    final response = await http.get(
+      Uri.parse('$_baseUrl/medicalAppointment/medicalAppointments/patient/$patientId'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode == 200) {
+      return List<Map<String, dynamic>>.from(json.decode(response.body));
+    } else if (response.statusCode == 401) {
+      throw Exception('Unauthorized: Invalid or expired token');
+    } else {
+      throw Exception('Failed to load patient appointments');
     }
   }
 
@@ -330,14 +332,20 @@ class MedicalAppointmentApi {
   }
 
     Future<Map<String, dynamic>> fetchPatientDetails(int patientId) async {
-    final profileId = await getProfileIdByPatientId(patientId);
-    if (profileId == null) {
-      throw Exception('Profile ID not found');
+      final token = await _getToken();
+      if (token == null) {
+        throw Exception('Token not found');
+      }
+      final response = await http.get(
+        Uri.parse('$_baseUrl/patient/$patientId'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else if (response.statusCode == 401) {
+        throw Exception('Unauthorized: Invalid or expired token');
+      } else {
+        throw Exception('Failed to load patient details');
+      }
     }
-    final profileDetails = await fetchProfileDetails(profileId);
-    if (profileDetails == null) {
-      throw Exception('Failed to load profile details');
-    }
-    return profileDetails;
-  }
 }

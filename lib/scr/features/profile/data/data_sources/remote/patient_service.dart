@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:trabajo_moviles_ninjacode/scr/core/utils/usecases/jwt_storage.dart';
 
 class PatientService {
-  final String baseUrl = 'http://localhost:8080/api/v1/medical-record/patient';
+  final String baseUrl = 'http://localhost:8080/api/v1/patient';
 
   Future<Map<String, dynamic>> fetchPatientDetails(int patientId) async {
     final token = await JwtStorage.getToken();

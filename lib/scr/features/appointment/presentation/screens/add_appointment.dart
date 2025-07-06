@@ -164,21 +164,37 @@ class _AddAppointmentScreenState extends State<AddAppointmentScreen> {
                 inputFormatters: [TimeTextInputFormatter()],
               ),
               SizedBox(height: 16),
-              _buildDropdown<int>(
-                value: _selectedPatientId,
-                items: _patients.map((patient) {
-                  return DropdownMenuItem<int>(
-                    value: patient['patientId'],
-                    child: Text(patient['fullName']),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedPatientId = value;
-                  });
-                },
-                labelText: 'Choose a Patient',
-                icon: Icons.person,
+              // Lista de pacientes con foto y nombre
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey),
+                ),
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Select Patient', style: TextStyle(fontWeight: FontWeight.bold)),
+                    SizedBox(height: 8),
+                    ..._patients.map((patient) => ListTile(
+                          leading: patient['image'] != null && patient['image'].toString().isNotEmpty
+                              ? CircleAvatar(
+                                  backgroundImage: NetworkImage(patient['image']),
+                                )
+                              : CircleAvatar(child: Icon(Icons.person)),
+                          title: Text(patient['fullName'] ?? ''),
+                          selected: _selectedPatientId == patient['id'],
+                          onTap: () {
+                            setState(() {
+                              _selectedPatientId = patient['id'];
+                            });
+                          },
+                          trailing: _selectedPatientId == patient['id']
+                              ? Icon(Icons.check, color: Colors.green)
+                              : null,
+                        )),
+                  ],
+                ),
               ),
               SizedBox(height: 16),
               _buildDropdown<Color>(
