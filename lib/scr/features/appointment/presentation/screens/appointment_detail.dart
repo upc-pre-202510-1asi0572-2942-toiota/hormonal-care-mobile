@@ -74,7 +74,7 @@ class _AppointmentDetailState extends State<AppointmentDetail> {
     if (_appointmentDetails == null || _patientDetails == null) {
       return Scaffold(
         appBar: AppBar(
-          backgroundColor: Color(0xFF6A828D),
+          backgroundColor: Color(0xFF6D46B8),
           leading: IconButton(
             icon: Icon(Icons.arrow_back, color: Colors.white),
             onPressed: () {
@@ -98,7 +98,7 @@ class _AppointmentDetailState extends State<AppointmentDetail> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color(0xFF6A828D),
+        backgroundColor: Color(0xFF6D46B8),
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
@@ -123,7 +123,7 @@ class _AppointmentDetailState extends State<AppointmentDetail> {
               child: Container(
                 padding: EdgeInsets.all(8.0),
                 decoration: BoxDecoration(
-                  color: Color(0xFF40535B),
+                  color: Color(0xFF6D46B8),
                   borderRadius: BorderRadius.circular(8.0),
                 ),
                 width: MediaQuery.of(context).size.width * 0.8, // Adjust width to be 80% of screen width
@@ -273,7 +273,7 @@ class _AppointmentDetailState extends State<AppointmentDetail> {
                       icon: Icon(Icons.edit, color: Colors.white),
                       label: Text('Edit', style: TextStyle(color: Colors.white, fontSize: 18)), // Aumenta el tamaño del texto
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFF40535B),
+                        backgroundColor: Color(0xFF6D46B8),
                         padding: EdgeInsets.symmetric(vertical: 16), // Aumenta el padding vertical
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8.0),

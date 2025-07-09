@@ -94,8 +94,8 @@ class _HomePatientsScreenState extends State<HomePatientsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color(0xFF6A828D),
-        title: Text("Today's Patients"),
+        backgroundColor: Color(0xFF6D46B8),
+        title: Text("Today's Meetings"),
         centerTitle: true,
         titleTextStyle: TextStyle(
           color: Colors.white,
@@ -116,14 +116,14 @@ class _HomePatientsScreenState extends State<HomePatientsScreen> {
                       final isPast = eventDate.isBefore(now);
 
                       return Card(
-                        color: isPast ? Color(0xFFB0BEC5) : Color(0xFFE0E0E0), // Oscurecer las citas pasadas
+                        color: isPast ? Color(0xFFE8E4F3) : Color(0xFFF5F3FF), // Purple theme for past and current appointments
                         margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         child: Stack(
                           children: [
                             ListTile(
                               leading: CircleAvatar(
                                 backgroundImage: NetworkImage(patients[index]['image']!),
-                                backgroundColor: Color(0xFF6A828D),
+                                backgroundColor: Color(0xFF6D46B8),
                               ),
                               title: Text(
                                 patients[index]['name']!,
@@ -143,7 +143,7 @@ class _HomePatientsScreenState extends State<HomePatientsScreen> {
                                   child: Container(
                                     padding: EdgeInsets.symmetric(horizontal: 4, vertical: 4), // Adjusted padding
                                     decoration: BoxDecoration(
-                                      color: Color(0xFF40535B),
+                                      color: Color(0xFF6D46B8),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Row(
@@ -169,7 +169,7 @@ class _HomePatientsScreenState extends State<HomePatientsScreen> {
                                 alignment: Alignment.center,
                                 child: CircleAvatar(
                                   radius: 12, // Half the size of the original
-                                  backgroundColor: Color(0xFF40535B),
+                                  backgroundColor: Color(0xFF6D46B8),
                                   child: Center(
                                     child: IconButton(
                                       padding: EdgeInsets.zero,
@@ -215,7 +215,7 @@ class _HomePatientsScreenState extends State<HomePatientsScreen> {
           }
         },
         child: Icon(Icons.add),
-        backgroundColor: Color(0xFF6A828D),
+        backgroundColor: Color(0xFF6D46B8),
       ),
     );
   }

@@ -233,7 +233,7 @@ class _EditAppointmentScreenState extends State<EditAppointmentScreen> {
             Navigator.of(context).pop();
           },
         ),
-        backgroundColor: Color(0xFF6A828D),
+        backgroundColor: Color(0xFF6D46B8),
         title: Text(
           'Edit Appointment',
           style: TextStyle(
@@ -379,7 +379,7 @@ class _EditAppointmentScreenState extends State<EditAppointmentScreen> {
           onPressed: _updateAppointment,
           child: Text('Save', style: TextStyle(color: Colors.white)),
           style: ElevatedButton.styleFrom(
-            backgroundColor: Color(0xFF40535B),
+            backgroundColor: Color(0xFF6D46B8),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8.0),
             ),

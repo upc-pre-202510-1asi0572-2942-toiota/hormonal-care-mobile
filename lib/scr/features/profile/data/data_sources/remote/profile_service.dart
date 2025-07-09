@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:trabajo_moviles_ninjacode/scr/core/utils/usecases/jwt_storage.dart';
 
@@ -63,5 +64,17 @@ class ProfileService {
     if (response.statusCode != 200) {
       throw Exception('Failed to update doctor profile');
     }
+  }
+
+  Future<http.StreamedResponse> uploadProfileImage({
+    required int profileId,
+    required File imageFile,
+    required String token,
+  }) async {
+    final url = Uri.parse('$baseUrl/profile/$profileId/image');
+    var request = http.MultipartRequest('PUT', url);
+    request.headers['Authorization'] = 'Bearer $token';
+    request.files.add(await http.MultipartFile.fromPath('file', imageFile.path));
+    return await request.send();
   }
 }

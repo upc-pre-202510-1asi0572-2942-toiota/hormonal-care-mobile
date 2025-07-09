@@ -72,14 +72,14 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Medical Appointments',
+          'Calendar',
           style: TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
           ),
         ),
         centerTitle: true,
-        backgroundColor: Color(0xFF6A828D),
+        backgroundColor: Color(0xFF6D46B8),
         iconTheme: IconThemeData(color: Colors.white),
       ),
       drawer: Drawer(
@@ -88,10 +88,10 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
           children: <Widget>[
             DrawerHeader(
               decoration: BoxDecoration(
-                color: Color(0xFF6A828D),
+                color: Color(0xFF6D46B8),
               ),
               child: Text(
-                'Calendar View',
+                'Calendar Views',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 24,

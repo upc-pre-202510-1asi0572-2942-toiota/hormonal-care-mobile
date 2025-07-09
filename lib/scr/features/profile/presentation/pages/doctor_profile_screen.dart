@@ -7,6 +7,9 @@ import '../widgets/profile_picture_widget.dart';
 import '../widgets/profile_field_widget.dart';
 import '../widgets/logout_button_widget.dart';
 import '../widgets/edit_mode_doctor_widget.dart';
+import 'package:trabajo_moviles_ninjacode/scr/features/profile/data/data_sources/remote/doctor_service.dart';
+import 'package:trabajo_moviles_ninjacode/scr/features/profile/data/data_sources/remote/profile_service.dart';
+import 'dart:io';
 import 'package:trabajo_moviles_ninjacode/scr/features/iam/presentation/pages/sign_in.dart';
 
 class DoctorProfileScreen extends StatefulWidget {
@@ -93,8 +96,8 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color(0xFF6A828D),
-        title: Text('Doctor Profile'),
+        backgroundColor: Color(0xFF6D46B8),
+        title: Text('Profile'),
         centerTitle: true,
         titleTextStyle: TextStyle(
           color: Colors.white,
@@ -111,7 +114,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 IconButton(
-                  icon: Icon(Icons.edit, color: const Color.fromARGB(255, 0, 0, 0)),
+                  icon: Icon(Icons.edit, color: Colors.black),
                   onPressed: toggleEditMode,
                 ),
                 SizedBox(width: 8.0),
@@ -131,13 +134,35 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                         isEditing: isEditing,
                         toggleEditMode: toggleEditMode,
                         imageUrl: imageUrl,
+                        borderColor: Color(0xFF6D46B8),
+                        onImageSelected: (File imageFile) async {
+                          final token = await JwtStorage.getToken();
+                          final profileId = await JwtStorage.getProfileId();
+                          if (token != null && profileId != null) {
+                            final response = await ProfileService().uploadProfileImage(
+                              profileId: profileId,
+                              imageFile: imageFile,
+                              token: token,
+                            );
+                            if (response.statusCode == 200) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Imagen actualizada correctamente')),
+                              );
+                              _loadDoctorProfileDetails();
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Error al actualizar imagen: \\${response.statusCode}')),
+                              );
+                            }
+                          }
+                        },
                       );
                     }
                   },
                 ),
                 SizedBox(width: 8.0),
                 IconButton(
-                  icon: Icon(Icons.logout, color: const Color.fromARGB(255, 0, 0, 0)),
+                  icon: Icon(Icons.logout, color: Colors.black),
                   onPressed: _showLogoutDialog,
                 ),
               ],
@@ -157,19 +182,64 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                     final doctorProfile = snapshot.data!;
                     return Column(
                       children: [
-                        ProfileFieldWidget(label: "Fullname", value: doctorProfile['fullName'] ?? ''),
+                        ProfileFieldWidget(label: "Name", value: doctorProfile['fullName'] ?? ''),
                         ProfileFieldWidget(label: "Gender", value: doctorProfile['gender'] ?? ''),
-                        ProfileFieldWidget(label: "Phone Number", value: doctorProfile['phoneNumber'] ?? ''),
+                        ProfileFieldWidget(label: "Phone", value: doctorProfile['phoneNumber'] ?? ''),
                         ProfileFieldWidget(label: "Birthday", value: doctorProfile['birthday'] ?? ''),
-                        ProfileFieldWidget(label: "RNE", value: doctorProfile['professionalIdentificationNumber']?.toString() ?? ''),
-                        ProfileFieldWidget(label: "SubSpecialty", value: doctorProfile['subSpecialty'] ?? ''),
+                        ProfileFieldWidget(label: "Medical License Number", value: doctorProfile['professionalIdentificationNumber']?.toString() ?? ''),
+                        ProfileFieldWidget(label: "Subspecialty", value: doctorProfile['subSpecialty'] ?? ''),
                       ],
                     );
                   }
                 },
               ),
             ],
-            // ...Opcional: modo edición...
+            if (isEditing) ...[
+              FutureBuilder<Map<String, dynamic>>(
+                future: _doctorProfileDetails,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(child: CircularProgressIndicator());
+                  } else if (snapshot.hasError) {
+                    return Center(child: Text('Error: \\${snapshot.error}'));
+                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return Center(child: Text('No data found'));
+                  } else {
+                    final doctorProfile = snapshot.data!;
+                    return EditModeDoctorWidget(
+                      doctorProfile: doctorProfile,
+                      onCancel: toggleEditMode,
+                      onSave: (updatedProfile) async {
+                        final userId = await JwtStorage.getUserId();
+                        final token = await JwtStorage.getToken();
+                        print('DEBUG TOKEN: ' + (token ?? 'NULL'));
+                        print('DEBUG updatedProfile: ' + json.encode(updatedProfile));
+                        if (userId != null && token != null && _doctorId != null) {
+                          if (updatedProfile['birthday'] != null && updatedProfile['birthday'].toString().length >= 10) {
+                            updatedProfile['birthday'] = updatedProfile['birthday'].toString().substring(0, 10);
+                          }
+                          final response = await DoctorService().updateDoctor(
+                            doctorId: _doctorId!,
+                            data: updatedProfile,
+                            token: token,
+                          );
+                          print('DEBUG PUT status: ' + response.statusCode.toString());
+                          print('DEBUG PUT body: ' + response.body);
+                          if (response.statusCode == 200) {
+                            toggleEditMode();
+                            _loadDoctorProfileDetails();
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Error updating profile: \\${response.statusCode}')),
+                            );
+                          }
+                        }
+                      },
+                    );
+                  }
+                },
+              ),
+            ],
           ],
         ),
       ),
