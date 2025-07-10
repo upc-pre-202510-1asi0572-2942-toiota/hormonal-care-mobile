@@ -42,8 +42,18 @@ class AuthService {
         await JwtStorage.saveRole(role);
 
         if (role == 'ROLE_DOCTOR') {
-          final fullName = await fetchAndSaveDoctorFullName(userId, token);
-          // Puedes usar fullName como lo necesites
+          // Fetch and save doctorId
+          final doctorResponse = await http.get(
+            Uri.parse('$baseUrl/doctor/by-user/$userId'),
+            headers: {'Authorization': 'Bearer $token'},
+          );
+          if (doctorResponse.statusCode == 200) {
+            final doctorData = json.decode(doctorResponse.body);
+            final doctorId = doctorData['id'];
+            if (doctorId != null) {
+              await JwtStorage.saveDoctorId(doctorId);
+            }
+          }
         }
 
         return token;

@@ -27,15 +27,15 @@ class PatientCard extends StatelessWidget {
                 children: [
                   CircleAvatar(
                     radius: avatarRadius,
-                    backgroundImage: NetworkImage(_getImageUrl(patient.profile?.image)),
+                    backgroundImage: NetworkImage(_getImageUrl(patient.image)),
                     backgroundColor: Color(0xFF40535B),
-                    child: patient.profile?.image == null || patient.profile!.image.isEmpty
+                    child: patient.image == null || patient.image!.isEmpty
                         ? Icon(Icons.person, size: avatarRadius, color: Colors.white)
                         : null,
                   ),
                   SizedBox(height: 10.0),
                   Text(
-                    patient.profile?.fullName ?? 'Unknown', // Mostrar el nombre completo del perfil
+                    patient.fullName ?? 'Unknown', // Mostrar el nombre completo del paciente
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: const Color.fromARGB(255, 0, 0, 0),
@@ -49,7 +49,7 @@ class PatientCard extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => MedicalRecordScreen(patientId: patient.patientRecordId),
+                          builder: (context) => MedicalRecordScreen(patientId: patient.id?.toString() ?? ''),
                         ),
                       );
                     },

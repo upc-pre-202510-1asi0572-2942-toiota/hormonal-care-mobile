@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:trabajo_moviles_ninjacode/scr/core/utils/usecases/jwt_storage.dart';
 import '../../../medical_prescription/domain/models/patient_model.dart';
-import '../../../medical_prescription/domain/models/profile_model.dart';
 import '../../domain/models/medication_model.dart';
 import '../../domain/models/prescription_model.dart';
 import '../../domain/models/treatment_model.dart'; // Importa el modelo de tratamiento
@@ -11,8 +10,8 @@ import '../../domain/models/prescriptionpost_model.dart';
 import '../../domain/models/medicaltype_model.dart';
 
 class MedicalRecordService {
-  final String baseUrl = 'http://localhost:8080/api/v1/medical-record/patient/record';
-  final String profileBaseUrl = 'http://localhost:8080/api/v1/profile/profile';
+  final String baseUrl = 'http://localhost:8080/api/v1/patient/record';
+  final String profileBaseUrl = 'http://localhost:8080/api/v1/profile/profile'; // eso no va ya, ya no existe ese endpoint
   final String medicationsUrl = 'http://localhost:8080/api/v1/medical-record/medications';
   final String prescriptionsUrl = 'http://localhost:8080/api/v1/medical-record/medications/prescriptions';
   final String treatmentsUrl = 'http://localhost:8080/api/v1/medical-record/treatments/medicalRecordId'; // URL base para tratamientos
@@ -30,18 +29,7 @@ class MedicalRecordService {
     final response = await http.get(Uri.parse('$baseUrl/$patientId'), headers: headers);
     if (response.statusCode == 200) {
       final patientData = json.decode(response.body);
-      final profileId = patientData['profileId'];
-
-      final profileResponse = await http.get(Uri.parse('$profileBaseUrl/$profileId'), headers: headers);
-      if (profileResponse.statusCode == 200) {
-        final profileData = json.decode(profileResponse.body);
-        final patient = Patient.fromJson(patientData);
-        patient.profile = Profile.fromJson(profileData);
-
-        return patient;
-      } else {
-        throw Exception('Error fetching profile with id $profileId');
-      }
+      return Patient.fromJson(patientData);
     } else {
       throw Exception('Error fetching patient with id $patientId');
     }

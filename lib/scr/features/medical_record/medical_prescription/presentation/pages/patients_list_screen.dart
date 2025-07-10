@@ -4,7 +4,8 @@ import '../widgets/patient_card.dart';
 import '../../domain/models/services/patients_list_service.dart';
 
 class PatientsListScreen extends StatefulWidget {
-  const PatientsListScreen({super.key});
+  final int doctorId;
+  const PatientsListScreen({super.key, required this.doctorId});
 
   @override
   _PatientsListScreenState createState() => _PatientsListScreenState();
@@ -17,7 +18,7 @@ class _PatientsListScreenState extends State<PatientsListScreen> {
   @override
   void initState() {
     super.initState();
-    _patientsFuture = _patientsListService.getPatients();
+    _patientsFuture = _patientsListService.getPatients(widget.doctorId);
   }
 
   @override

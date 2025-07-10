@@ -72,27 +72,27 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> with SingleTi
                 children: [
                   CircleAvatar(
                     radius: 50,
-                    backgroundImage: NetworkImage(_getImageUrl(patient.profile?.image)),
+                    backgroundImage: NetworkImage(_getImageUrl(patient.image)),
                     backgroundColor: const Color.fromARGB(255, 0, 0, 0),
-                    child: patient.profile?.image == null || patient.profile!.image.isEmpty
-                        ? Icon(Icons.person, color: Colors.white)
+                    child: patient.image == null || patient.image!.isEmpty
+                        ? Icon(Icons.person, size: 50, color: Colors.white)
                         : null,
                   ),
                   SizedBox(height: 15),
-                  _buildInfoField('Full name', patient.profile?.fullName ?? 'Unknown'),
+                  _buildInfoField('Full name', patient.fullName ?? 'Unknown'),
                   SizedBox(height: 10),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Expanded(child: _buildInfoField('Gender', patient.profile?.gender ?? 'Unknown')),
+                      Expanded(child: _buildInfoField('Gender', patient.gender ?? 'Unknown')),
                       SizedBox(width: 10),
-                      Expanded(child: _buildInfoField('Birthday', _formatDate(patient.profile?.birthday))),
+                      Expanded(child: _buildInfoField('Birthday', _formatDate(patient.birthday))),
                     ],
                   ),
                   SizedBox(height: 10),
-                  _buildInfoField('Phone number', patient.profile?.phoneNumber ?? 'Unknown'),
+                  _buildInfoField('Phone number', patient.phoneNumber ?? 'Unknown'),
                   SizedBox(height: 10),
-                  _buildInfoField('Type of blood', patient.typeOfBlood),
+                  _buildInfoField('Type of blood', patient.typeOfBlood ?? ''),
                   SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: () {
@@ -176,9 +176,9 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> with SingleTi
               children: [
                 CircleAvatar(
                   radius: 20,
-                  backgroundImage: NetworkImage(_getImageUrl(patient.profile?.image)),
+                  backgroundImage: NetworkImage(_getImageUrl(patient.image)),
                   backgroundColor: Colors.blueGrey[200],
-                  child: patient.profile?.image == null || patient.profile!.image.isEmpty
+                  child: patient.image == null || patient.image!.isEmpty
                       ? Icon(Icons.person, color: Colors.white)
                       : null,
                 ),
@@ -187,7 +187,7 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> with SingleTi
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      patient.profile?.fullName ?? 'Unknown',
+                      patient.fullName ?? 'Unknown',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 16,
@@ -199,7 +199,7 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> with SingleTi
               ],
             ),
             Text(
-              'Age: ${calculateAge(patient.profile?.birthday)}',
+              'Age: ${calculateAge(patient.birthday)}',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 16,
@@ -239,7 +239,7 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> with SingleTi
         controller: _tabController,
         children: [
           _buildPatientHistoryTab(patient),
-          _buildDiagnosisAndTreatmentsTab(patient.id), // Usar el medicalRecordId
+          _buildDiagnosisAndTreatmentsTab(patient.id ?? 0), // Usar el medicalRecordId
           _buildMedicalTestsTab(),
           _buildExternalReportsTab(),
           Center(child: Text('Consultation History content')),
@@ -261,7 +261,7 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> with SingleTi
         ),
         SizedBox(height: 10),
         Text(
-          patient.personalHistory,
+          patient.personalHistory ?? '',
           style: TextStyle(fontSize: 16),
         ),
         SizedBox(height: 20),
@@ -274,7 +274,7 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> with SingleTi
         ),
         SizedBox(height: 10),
         Text(
-          patient.familyHistory,
+          patient.familyHistory ?? '',
           style: TextStyle(fontSize: 16),
         ),
       ],

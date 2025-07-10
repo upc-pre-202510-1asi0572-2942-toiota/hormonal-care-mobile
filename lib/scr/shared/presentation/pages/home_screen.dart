@@ -38,7 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
       _widgetOptions = [
         HomePatientsScreen(doctorId: doctorId ?? 0),
-        PatientsListScreen(),
+        PatientsListScreen(doctorId: doctorId ?? 0),
         AppointmentScreen(),
         // NotificationScreen(doctorId: doctorId ?? 0),
         role == 'ROLE_DOCTOR' ? DoctorProfileScreen() : PatientProfileScreen(),
