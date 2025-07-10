@@ -11,7 +11,6 @@ import '../../domain/models/medicaltype_model.dart';
 
 class MedicalRecordService {
   final String baseUrl = 'http://localhost:8080/api/v1/patient/record';
-  final String profileBaseUrl = 'http://localhost:8080/api/v1/profile/profile'; // eso no va ya, ya no existe ese endpoint
   final String medicationsUrl = 'http://localhost:8080/api/v1/medical-record/medications';
   final String prescriptionsUrl = 'http://localhost:8080/api/v1/medical-record/medications/prescriptions';
   final String treatmentsUrl = 'http://localhost:8080/api/v1/medical-record/treatments/medicalRecordId'; // URL base para tratamientos
@@ -26,6 +25,7 @@ class MedicalRecordService {
       'Authorization': 'Bearer $token',
     };
 
+    // patientId is the same as medical record id
     final response = await http.get(Uri.parse('$baseUrl/$patientId'), headers: headers);
     if (response.statusCode == 200) {
       final patientData = json.decode(response.body);
