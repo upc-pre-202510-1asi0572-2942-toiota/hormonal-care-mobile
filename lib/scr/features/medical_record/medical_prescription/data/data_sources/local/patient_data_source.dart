@@ -6,7 +6,7 @@ class PatientsDataSource {
 
   Future<List<Patient>> getPatients() async {
     try {
-      return await _patientsListService.getPatients();
+      return await _patientsListService.getPatients(1);
     } catch (e) {
       throw Exception('Error fetching patients: $e');
     }
